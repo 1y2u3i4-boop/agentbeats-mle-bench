@@ -5,10 +5,6 @@
     type: "object",
     properties: {
       openai_api_key: { type: "string", secret: true },
-      openai_model: { type: "string" },
-      max_iterations: { type: "string" },
-      num_attempts: { type: "string" },
-      code_timeout: { type: "string" },
     },
     required: ["openai_api_key"],
     additionalProperties: false,
@@ -24,10 +20,6 @@
 
     env: {
       OPENAI_API_KEY: "${config.openai_api_key}",
-      OPENAI_MODEL: "${config.openai_model || 'o4-mini'}",
-      MAX_ITERATIONS: "${config.max_iterations || '12'}",
-      NUM_ATTEMPTS: "${config.num_attempts || '3'}",
-      CODE_TIMEOUT: "${config.code_timeout || '600'}",
     },
 
     network: {
