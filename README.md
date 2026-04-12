@@ -1,38 +1,48 @@
-# A2A Agent Template
+# MLE-Bench Purple Agent
 
-A minimal template for building [A2A (Agent-to-Agent)](https://a2a-protocol.org/latest/) agents.
+An autonomous ML engineering agent for [AgentBeats MLE-Bench](https://agentbeats.dev/agentbeater/mle-bench). Solves Kaggle competitions using AIDE-style tree search with iterative code generation and execution.
+
+## Architecture
+
+The agent uses an **AIDE-style tree search** approach:
+
+1. **Receive** competition data (tar.gz) and instructions from the MLE-Bench green agent
+2. **Profile** the dataset to understand its structure
+3. **Generate** an initial complete Python solution via LLM
+4. **Execute** the solution in an isolated subprocess
+5. **Iterate** — select the best-scoring node, ask LLM to improve it
+6. **Recover** — if no valid submission is produced, try simplified fallback approaches
+7. **Return** the best `submission.csv` as an artifact
+
+### Structural pass@k
+
+Multiple independent solver attempts run with different strategy seeds (quick_baseline, data_first, big_model, ensemble_focus, feature_heavy), and the best result is selected.
 
 ## Project Structure
 
 ```
 src/
-├─ server.py      # Server setup and agent card configuration
+├─ server.py      # A2A server setup and agent card
 ├─ executor.py    # A2A request handling
-├─ agent.py       # Your agent implementation goes here
+├─ agent.py       # Main agent: receives data, orchestrates solving
+├─ tree.py        # AIDE-style tree search engine
+├─ llm.py         # LLM client (OpenAI-compatible)
+├─ interpreter.py # Subprocess code execution
+├─ strategies.py  # Strategy seeds for diversity
 └─ messenger.py   # A2A messaging utilities
-tests/
-└─ test_agent.py  # Agent tests
-Dockerfile            # Docker configuration
-pyproject.toml        # Python dependencies
-amber-manifest.json5  # Amber manifest
-.github/
-└─ workflows/
-   └─ test-and-publish.yml # CI workflow
 ```
 
-## Getting Started
+## Configuration
 
-1. **Create your repository** - Click "Use this template" to create your own repository from this template
+Environment variables:
 
-2. **Implement your agent** - Add your agent logic to [`src/agent.py`](src/agent.py)
-
-3. **Configure your agent card** - Fill in your agent's metadata (name, skills, description) in [`src/server.py`](src/server.py)
-
-4. **Fill out your [Amber](https://github.com/RDI-Foundation/amber) manifest** - Update [`amber-manifest.json5`](amber-manifest.json5) to use your agent in Amber scenarios
-
-5. **Write your tests** - Add custom tests for your agent in [`tests/test_agent.py`](tests/test_agent.py)
-
-For a concrete example of implementing an agent using this template, see this [draft PR](https://github.com/RDI-Foundation/agent-template/pull/8).
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `OPENAI_API_KEY` | (required) | API key for the LLM provider |
+| `OPENAI_MODEL` | `o4-mini` | Model to use for code generation |
+| `MAX_ITERATIONS` | `12` | Tree search iterations per attempt |
+| `NUM_ATTEMPTS` | `3` | Number of parallel strategy attempts |
+| `CODE_TIMEOUT` | `600` | Timeout (seconds) per code execution |
 
 ## Running Locally
 
@@ -40,7 +50,8 @@ For a concrete example of implementing an agent using this template, see this [d
 # Install dependencies
 uv sync
 
-# Run the server
+# Run the server (set your API key first)
+export OPENAI_API_KEY=sk-...
 uv run src/server.py
 ```
 
@@ -48,43 +59,22 @@ uv run src/server.py
 
 ```bash
 # Build the image
-docker build -t my-agent .
+docker build --platform linux/amd64 -t mle-bench-agent .
 
 # Run the container
-docker run -p 9009:9009 my-agent
+docker run -p 9009:9009 -e OPENAI_API_KEY=sk-... mle-bench-agent
 ```
 
 ## Testing
 
-Run A2A conformance tests against your agent.
-
 ```bash
-# Install test dependencies
 uv sync --extra test
-
-# Start your agent (uv or docker; see above)
-
-# Run tests against your running agent URL
+uv run src/server.py &
 uv run pytest --agent-url http://localhost:9009
 ```
 
 ## Publishing
 
-The repository includes a GitHub Actions workflow that automatically builds, tests, and publishes a Docker image of your agent to GitHub Container Registry.
+Push to `main` or create a version tag (`git tag v1.0.0 && git push origin v1.0.0`) to trigger the CI/CD workflow that builds, tests, and publishes the Docker image to GitHub Container Registry.
 
-If your agent needs API keys or other secrets, add them in Settings → Secrets and variables → Actions → Repository secrets. They'll be available as environment variables during CI tests.
-
-- **Push to `main`** → publishes `latest` tag:
-```
-ghcr.io/<your-username>/<your-repo-name>:latest
-```
-
-- **Create a git tag** (e.g. `git tag v1.0.0 && git push origin v1.0.0`) → publishes version tags:
-```
-ghcr.io/<your-username>/<your-repo-name>:1.0.0
-ghcr.io/<your-username>/<your-repo-name>:1
-```
-
-Once the workflow completes, find your Docker image in the Packages section (right sidebar of your repository). Configure the package visibility in package settings.
-
-> **Note:** Organization repositories may need package write permissions enabled manually (Settings → Actions → General). Version tags must follow [semantic versioning](https://semver.org/) (e.g., `v1.0.0`).
+Add `OPENAI_API_KEY` in Settings > Secrets and variables > Actions > Repository secrets.
