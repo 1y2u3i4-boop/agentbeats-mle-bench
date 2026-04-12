@@ -15,7 +15,7 @@
   },
 
   program: {
-    image: "ghcr.io/a-kirillov/agentbeats-mle-bench:latest",
+    image: "ghcr.io/1y2u3i4-boop/agentbeats-mle-bench:latest",
     entrypoint: "uv run python src/server.py --host 0.0.0.0 --port 9010",
 
     env: {
