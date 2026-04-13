@@ -10,6 +10,10 @@ dependencies = [
     "uvicorn>=0.38.0",
     "pandas>=2.0.0",
     "scikit-learn>=1.4.0",
+    "numpy>=2.4.4",
+    "lightgbm>=4.6.0",
+    "xgboost>=3.2.0",
+    "catboost>=1.2.10",
 ]
 
 [project.optional-dependencies]

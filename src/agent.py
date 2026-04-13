@@ -35,8 +35,10 @@ from tree import SolutionTree
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
-OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "o4-mini")
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("OPENAI_API_KEY", "")
+OPENROUTER_MODEL = os.environ.get("OPENROUTER_MODEL") or os.environ.get("OPENAI_MODEL", "qwen/qwen3.6-plus")
+LLM_BASE_URL = os.environ.get("LLM_BASE_URL") or os.environ.get("OPENROUTER_BASE_URL")
+LLM_PROVIDER = os.environ.get("LLM_PROVIDER")
 MAX_ITERATIONS = int(os.environ.get("MAX_ITERATIONS", "12"))
 CODE_TIMEOUT = int(os.environ.get("CODE_TIMEOUT", "600"))
 NUM_ATTEMPTS = int(os.environ.get("NUM_ATTEMPTS", "3"))
@@ -88,10 +90,10 @@ class Agent:
             )
             return
 
-        api_key = OPENAI_API_KEY
+        api_key = OPENROUTER_API_KEY
         if not api_key:
             await updater.add_artifact(
-                parts=[Part(root=TextPart(text="Error: OPENAI_API_KEY env var required"))],
+                parts=[Part(root=TextPart(text="Error: OPENROUTER_API_KEY env var required (or OPENAI_API_KEY fallback)"))],
                 name="Error",
             )
             return
@@ -104,7 +106,7 @@ class Agent:
             TaskState.working,
             new_agent_text_message(
                 f"Starting MLE-Bench solve: {NUM_ATTEMPTS} parallel attempt(s), "
-                f"model={OPENAI_MODEL}, iterations={MAX_ITERATIONS}, HCE=enabled"
+                f"model={OPENROUTER_MODEL}, iterations={MAX_ITERATIONS}, HCE=enabled"
             ),
         )
 
@@ -147,7 +149,7 @@ class Agent:
             f"Complete: {NUM_ATTEMPTS} parallel attempt(s), "
             f"best_score={best_score}, "
             f"nodes={len(best_result.all_nodes) if best_result else 0}, "
-            f"model={OPENAI_MODEL}"
+            f"model={OPENROUTER_MODEL}"
         )
 
         await updater.add_artifact(
@@ -190,7 +192,12 @@ class Agent:
                 ),
             )
 
-            llm = LLMClient(api_key=api_key, model=OPENAI_MODEL)
+            llm = LLMClient(
+                api_key=api_key,
+                model=OPENROUTER_MODEL,
+                base_url=LLM_BASE_URL,
+                provider=LLM_PROVIDER,
+            )
             strategy_text = get_strategy(strat_name)
             tree = SolutionTree(
                 workdir=workdir,

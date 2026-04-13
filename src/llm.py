@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-import re
+import os
 from dataclasses import dataclass
 from typing import Any
 
@@ -14,14 +14,17 @@ logger = logging.getLogger(__name__)
 
 def _detect_provider(model: str) -> str:
     model_lower = model.lower()
+    if "/" in model_lower:
+        return "openrouter"
     if "claude" in model_lower:
         return "anthropic"
     if "gemini" in model_lower:
         return "google"
-    return "openai"
+    return "openrouter"
 
 
 _PROVIDER_BASE_URLS: dict[str, str | None] = {
+    "openrouter": "https://openrouter.ai/api/v1",
     "openai": None,
     "anthropic": "https://api.anthropic.com/v1/",
     "google": "https://generativelanguage.googleapis.com/v1beta/openai/",
@@ -38,7 +41,7 @@ class LLMClient:
     def __init__(
         self,
         api_key: str,
-        model: str = "o4-mini",
+        model: str = "qwen/qwen3.6-plus",
         base_url: str | None = None,
         provider: str | None = None,
     ):
@@ -48,6 +51,16 @@ class LLMClient:
         kwargs: dict[str, Any] = {"api_key": api_key}
         if effective_base_url:
             kwargs["base_url"] = effective_base_url
+        if self.provider == "openrouter":
+            referer = os.environ.get("OPENROUTER_SITE_URL")
+            title = os.environ.get("OPENROUTER_APP_NAME")
+            headers: dict[str, str] = {}
+            if referer:
+                headers["HTTP-Referer"] = referer
+            if title:
+                headers["X-Title"] = title
+            if headers:
+                kwargs["default_headers"] = headers
         self._client = OpenAI(**kwargs)
         logger.info(
             "LLMClient: provider=%s, model=%s, base_url=%s",

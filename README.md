@@ -38,8 +38,9 @@ Environment variables:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `OPENAI_API_KEY` | (required) | API key for the LLM provider |
-| `OPENAI_MODEL` | `o4-mini` | Model to use for code generation |
+| `OPENROUTER_API_KEY` | (required) | API key for OpenRouter (fallback: `OPENAI_API_KEY`) |
+| `OPENROUTER_MODEL` | `qwen/qwen3.6-plus` | Model to use for code generation |
+| `OPENROUTER_BASE_URL` | `https://openrouter.ai/api/v1` | Override OpenRouter base URL if needed |
 | `MAX_ITERATIONS` | `12` | Tree search iterations per attempt |
 | `NUM_ATTEMPTS` | `3` | Number of parallel strategy attempts |
 | `CODE_TIMEOUT` | `600` | Timeout (seconds) per code execution |
@@ -51,7 +52,7 @@ Environment variables:
 uv sync
 
 # Run the server (set your API key first)
-export OPENAI_API_KEY=sk-...
+export OPENROUTER_API_KEY=sk-or-v1-...
 uv run src/server.py
 ```
 
@@ -62,7 +63,7 @@ uv run src/server.py
 docker build --platform linux/amd64 -t mle-bench-agent .
 
 # Run the container
-docker run -p 9009:9009 -e OPENAI_API_KEY=sk-... mle-bench-agent
+docker run -p 9009:9009 -e OPENROUTER_API_KEY=sk-or-v1-... mle-bench-agent
 ```
 
 ## Testing
@@ -77,4 +78,4 @@ uv run pytest --agent-url http://localhost:9009
 
 Push to `main` or create a version tag (`git tag v1.0.0 && git push origin v1.0.0`) to trigger the CI/CD workflow that builds, tests, and publishes the Docker image to GitHub Container Registry.
 
-Add `OPENAI_API_KEY` in Settings > Secrets and variables > Actions > Repository secrets.
+Add `OPENROUTER_API_KEY` in Settings > Secrets and variables > Actions > Repository secrets.
