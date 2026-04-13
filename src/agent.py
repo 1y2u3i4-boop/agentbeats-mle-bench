@@ -35,13 +35,13 @@ from tree import SolutionTree
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("OPENAI_API_KEY", "")
-OPENROUTER_MODEL = os.environ.get("OPENROUTER_MODEL") or os.environ.get("OPENAI_MODEL", "openai/gpt-5.4")
-LLM_BASE_URL = os.environ.get("LLM_BASE_URL") or os.environ.get("OPENROUTER_BASE_URL")
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
+OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-5.4")
+LLM_BASE_URL = os.environ.get("LLM_BASE_URL")
 LLM_PROVIDER = os.environ.get("LLM_PROVIDER")
 LLM_REASONING_EFFORT = (
     os.environ.get("LLM_REASONING_EFFORT")
-    or os.environ.get("OPENROUTER_REASONING_EFFORT")
+    or os.environ.get("OPENAI_REASONING_EFFORT")
     or "high"
 )
 MAX_ITERATIONS = int(os.environ.get("MAX_ITERATIONS", "12"))
@@ -95,10 +95,10 @@ class Agent:
             )
             return
 
-        api_key = OPENROUTER_API_KEY
+        api_key = OPENAI_API_KEY
         if not api_key:
             await updater.add_artifact(
-                parts=[Part(root=TextPart(text="Error: OPENROUTER_API_KEY env var required (or OPENAI_API_KEY fallback)"))],
+                parts=[Part(root=TextPart(text="Error: OPENAI_API_KEY env var required"))],
                 name="Error",
             )
             return
@@ -111,7 +111,7 @@ class Agent:
             TaskState.working,
             new_agent_text_message(
                 f"Starting MLE-Bench solve: {NUM_ATTEMPTS} parallel attempt(s), "
-                f"model={OPENROUTER_MODEL}, reasoning_effort={LLM_REASONING_EFFORT}, "
+                f"model={OPENAI_MODEL}, reasoning_effort={LLM_REASONING_EFFORT}, "
                 f"iterations={MAX_ITERATIONS}, HCE=enabled"
             ),
         )
@@ -155,7 +155,7 @@ class Agent:
             f"Complete: {NUM_ATTEMPTS} parallel attempt(s), "
             f"best_score={best_score}, "
             f"nodes={len(best_result.all_nodes) if best_result else 0}, "
-            f"model={OPENROUTER_MODEL}"
+            f"model={OPENAI_MODEL}"
         )
 
         await updater.add_artifact(
@@ -200,7 +200,7 @@ class Agent:
 
             llm = LLMClient(
                 api_key=api_key,
-                model=OPENROUTER_MODEL,
+                model=OPENAI_MODEL,
                 base_url=LLM_BASE_URL,
                 provider=LLM_PROVIDER,
                 reasoning_effort=LLM_REASONING_EFFORT,
