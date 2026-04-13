@@ -36,9 +36,14 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("OPENAI_API_KEY", "")
-OPENROUTER_MODEL = os.environ.get("OPENROUTER_MODEL") or os.environ.get("OPENAI_MODEL", "qwen/qwen3.6-plus")
+OPENROUTER_MODEL = os.environ.get("OPENROUTER_MODEL") or os.environ.get("OPENAI_MODEL", "openai/gpt-5.4")
 LLM_BASE_URL = os.environ.get("LLM_BASE_URL") or os.environ.get("OPENROUTER_BASE_URL")
 LLM_PROVIDER = os.environ.get("LLM_PROVIDER")
+LLM_REASONING_EFFORT = (
+    os.environ.get("LLM_REASONING_EFFORT")
+    or os.environ.get("OPENROUTER_REASONING_EFFORT")
+    or "high"
+)
 MAX_ITERATIONS = int(os.environ.get("MAX_ITERATIONS", "12"))
 CODE_TIMEOUT = int(os.environ.get("CODE_TIMEOUT", "600"))
 NUM_ATTEMPTS = int(os.environ.get("NUM_ATTEMPTS", "3"))
@@ -106,7 +111,8 @@ class Agent:
             TaskState.working,
             new_agent_text_message(
                 f"Starting MLE-Bench solve: {NUM_ATTEMPTS} parallel attempt(s), "
-                f"model={OPENROUTER_MODEL}, iterations={MAX_ITERATIONS}, HCE=enabled"
+                f"model={OPENROUTER_MODEL}, reasoning_effort={LLM_REASONING_EFFORT}, "
+                f"iterations={MAX_ITERATIONS}, HCE=enabled"
             ),
         )
 
@@ -197,6 +203,7 @@ class Agent:
                 model=OPENROUTER_MODEL,
                 base_url=LLM_BASE_URL,
                 provider=LLM_PROVIDER,
+                reasoning_effort=LLM_REASONING_EFFORT,
             )
             strategy_text = get_strategy(strat_name)
             tree = SolutionTree(

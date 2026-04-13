@@ -41,12 +41,14 @@ class LLMClient:
     def __init__(
         self,
         api_key: str,
-        model: str = "qwen/qwen3.6-plus",
+        model: str = "openai/gpt-5.4",
         base_url: str | None = None,
         provider: str | None = None,
+        reasoning_effort: str | None = "high",
     ):
         self.model = model
         self.provider = provider or _detect_provider(model)
+        self.reasoning_effort = reasoning_effort.lower() if reasoning_effort else None
         effective_base_url = base_url or _PROVIDER_BASE_URLS.get(self.provider)
         kwargs: dict[str, Any] = {"api_key": api_key}
         if effective_base_url:
@@ -76,9 +78,12 @@ class LLMClient:
             ],
         }
         model_lower = self.model.lower()
-        is_reasoning = any(model_lower.startswith(p) for p in ("o1", "o3", "o4"))
+        model_name = model_lower.split("/")[-1]
+        is_reasoning = model_name.startswith(("o1", "o3", "o4", "gpt-5"))
         if not is_reasoning:
             kwargs["temperature"] = temperature
+        elif self.reasoning_effort:
+            kwargs["reasoning_effort"] = self.reasoning_effort
         if self.provider == "anthropic":
             kwargs["max_tokens"] = 16384
 

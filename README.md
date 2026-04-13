@@ -39,8 +39,9 @@ Environment variables:
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `OPENROUTER_API_KEY` | (required) | API key for OpenRouter (fallback: `OPENAI_API_KEY`) |
-| `OPENROUTER_MODEL` | `qwen/qwen3.6-plus` | Model to use for code generation |
+| `OPENROUTER_MODEL` | `openai/gpt-5.4` | Model to use for code generation |
 | `OPENROUTER_BASE_URL` | `https://openrouter.ai/api/v1` | Override OpenRouter base URL if needed |
+| `OPENROUTER_REASONING_EFFORT` | `high` | Reasoning depth for reasoning models (`low`, `medium`, `high`) |
 | `MAX_ITERATIONS` | `12` | Tree search iterations per attempt |
 | `NUM_ATTEMPTS` | `3` | Number of parallel strategy attempts |
 | `CODE_TIMEOUT` | `600` | Timeout (seconds) per code execution |
